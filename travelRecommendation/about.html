@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About Us - Travel Recommendation</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      line-height: 1.6;
+    }
+
+    nav {
+      background-color: #0a3d62;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+    }
+
+    .nav-left {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+
+    .container {
+      padding: 40px 20px;
+      max-width: 1000px;
+      margin: auto;
+      background-color: white;
+    }
+
+    h1, h2 {
+      color: #0a3d62;
+    }
+
+    .team {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .team-member {
+      text-align: center;
+      background-color: #f1f1f1;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .team-member img {
+      width: 80px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      background-color: #0a3d62;
+      color: white;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav>
+    <div class="nav-left">🌍 Travel Recommendation</div>
+    <div class="nav-links">
+      <a href="travel_recommendation.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <div class="container" id="about">
+    <h1>About Us</h1>
+    <p>
+      Welcome to Travel Recommendation! We help you discover the best destinations based on your interests. Whether you're looking for tropical beaches, historical temples, or the best cities to explore, we offer personalized suggestions to match your taste.
+    </p>
+
+    <h2>Our Team</h2>
+    <div class="team">
+      <div class="team-member">
+        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Team Member">
+        <h4>Ahmed Samir</h4>
+        <p>Frontend Developer</p>
+      </div>
+      <div class="team-member">
+        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Team Member">
+        <h4>Laila Mohamed</h4>
+        <p>Backend Developer</p>
+      </div>
+      <div class="team-member">
+        <img src="https://randomuser.me/api/portraits/men/65.jpg" alt="Team Member">
+        <h4>Omar Khaled</h4>
+        <p>UI/UX Designer</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2025 Travel Recommendation. All rights reserved.
+  </footer>
+</body>
+</html>
