@@ -1,177 +1,232 @@
-// تحميل البيانات من ملف JSON
-let travelData = null;
+// Global variables
+let travelData = {};
 
-document.addEventListener("DOMContentLoaded", function () {
-  // تحميل البيانات عند بدء التطبيق
-  fetch('travel_recommendation_api.json')
-    .then(response => response.json())
-    .then(data => {
-      travelData = data;
-      console.log('تم تحميل البيانات بنجاح:', data);
-      // عرض جميع البيانات في البداية
-      displayAllData();
-    })
-    .catch(error => console.error('خطأ في تحميل البيانات:', error));
+// Keywords mapping
+const keywordMap = {
+    beach: ["beach", "beaches", "coast", "seaside", "shore"],
+    temple: ["temple", "temples", "shrine", "pagoda", "sanctuary"],
+    country: {
+        japan: ["japan", "nippon"],
+        brazil: ["brazil", "brasil"],
+        australia: ["australia", "aussie", "oz"]
+    }
+};
+
+// Timezone information
+const timeZones = {
+    "Australia": "Australia/Sydney",
+    "Japan": "Asia/Tokyo",
+    "Brazil": "America/Sao_Paulo"
+};
+
+// Load data when page loads
+window.addEventListener('DOMContentLoaded', async () => {
+    await loadTravelData();
+    setupEventListeners();
 });
 
-function displayCountries(countries) {
-  const container = document.getElementById("countries-container");
+// Load JSON file
+async function loadTravelData() {
+    try {
+        const response = await fetch('travel_recommendation_api.json');
+        travelData = await response.json();
+    } catch (error) {
+        console.error('Error loading data:', error);
+        showMessage('Sorry, there was an error loading the data', 'error');
+    }
+}
 
-  countries.forEach((country) => {
-    const countryTitle = document.createElement("h2");
-    countryTitle.textContent = country.name;
-    container.appendChild(countryTitle);
+// Setup event listeners
+function setupEventListeners() {
+    const searchBtn = document.getElementById('searchBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const searchInput = document.getElementById('searchInput');
 
-    country.cities.forEach((city) => {
-      const cityDiv = document.createElement("div");
-      cityDiv.classList.add("item");
-
-      cityDiv.innerHTML = `
-        <h3>${city.name}</h3>
-        <img src="${city.imageUrl}" alt="${city.name}" width="200" />
-        <p>${city.description}</p>
-      `;
-
-      container.appendChild(cityDiv);
+    searchBtn.addEventListener('click', performSearch);
+    clearBtn.addEventListener('click', clearResults);
+    
+    // Search on Enter key press
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
     });
-  });
 }
 
-function displayTemples(temples) {
-  const container = document.getElementById("temples-container");
-
-  temples.forEach((temple) => {
-    const templeDiv = document.createElement("div");
-    templeDiv.classList.add("item");
-
-    templeDiv.innerHTML = `
-      <h3>${temple.name}</h3>
-      <img src="${temple.imageUrl}" alt="${temple.name}" width="200" />
-      <p>${temple.description}</p>
-    `;
-
-    container.appendChild(templeDiv);
-  });
-}
-
-function displayBeaches(beaches) {
-  const container = document.getElementById("beaches-container");
-  if (!beaches) return;
-  
-  container.innerHTML = ""; // مسح المحتوى السابق
-
-  beaches.forEach((beach) => {
-    const beachDiv = document.createElement("div");
-    beachDiv.classList.add("item");
-
-    beachDiv.innerHTML = `
-      <h3>${beach.name}</h3>
-      <img src="${beach.imageUrl || beach.image}" alt="${beach.name}" width="200" />
-      <p>${beach.description}</p>
-    `;
-
-    container.appendChild(beachDiv);
-  });
-}
-
-// دالة عرض جميع البيانات
-function displayAllData() {
-  if (travelData) {
-    displayCountries(travelData.countries);
-    displayTemples(travelData.temples);
-    displayBeaches(travelData.beaches);
-  }
-}
-
-// دالة البحث
+// Perform search
 function performSearch() {
-  const searchInput = document.getElementById('searchInput').value.toLowerCase().trim();
-  const recommendationList = document.getElementById('recommendationList');
-  
-  if (!searchInput) {
-    alert('الرجاء إدخال كلمة مفتاحية للبحث');
-    return;
-  }
+    const searchInput = document.getElementById('searchInput');
+    const query = searchInput.value.trim().toLowerCase();
+    
+    if (!query) {
+        showMessage('Please enter a search term', 'error');
+        return;
+    }
 
-  clearResults();
-  let results = [];
-  
-  // البحث في الشواطئ
-  if (searchInput.includes('شاطئ') || searchInput.includes('beach')) {
-    results = travelData.beaches || [];
-  } 
-  // البحث في المعابد
-  else if (searchInput.includes('معبد') || searchInput.includes('temple')) {
-    results = travelData.temples || [];
-  } 
-  // البحث في الدول
-  else if (searchInput.includes('دولة') || searchInput.includes('country')) {
-    results = travelData.countries || [];
-  }
-
-  results.forEach(item => {
-    const card = createResultCard(item);
-    recommendationList.appendChild(card);
-  });
-
-  if (results.length === 0) {
-    recommendationList.innerHTML = '<p>لم يتم العثور على نتائج</p>';
-  }
+    const results = searchForRecommendations(query);
+    displayResults(results);
 }
 
-// دالة إنشاء بطاقة نتيجة
-function createResultCard(item) {
-  const card = document.createElement('div');
-  card.classList.add('result-card');
-  card.style.cssText = `
-    width: 300px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin: 10px;
-  `;
+// Search in data
+function searchForRecommendations(query) {
+    let results = [];
 
-  const timeDisplay = item.timeZone ? 
-    `<p style="margin-top: 10px;">التوقيت المحلي: <span id="time-${item.name}"></span></p>` : '';
+    // Search for beaches
+    if (keywordMap.beach.some(keyword => query.includes(keyword))) {
+        results = travelData.beaches || [];
+        return { type: 'beaches', data: results };
+    }
 
-  card.innerHTML = `
-    <img src="${item.imageUrl || item.image}" alt="${item.name}" style="width: 100%; height: 200px; object-fit: cover;">
-    <div style="padding: 15px;">
-      <h3 style="margin: 0 0 10px 0;">${item.name}</h3>
-      <p style="margin: 0;">${item.description}</p>
-      ${timeDisplay}
-    </div>
-  `;
+    // Search for temples
+    if (keywordMap.temple.some(keyword => query.includes(keyword))) {
+        results = travelData.temples || [];
+        return { type: 'temples', data: results };
+    }
 
-  if (item.timeZone) {
-    updateLocalTime(item.name, item.timeZone);
-    setInterval(() => updateLocalTime(item.name, item.timeZone), 60000);
-  }
+    // Search for countries
+    for (const [countryKey, aliases] of Object.entries(keywordMap.country)) {
+        if (aliases.some(alias => query.includes(alias))) {
+            const country = travelData.countries?.find(c => 
+                c.name.toLowerCase().includes(countryKey)
+            );
+            if (country) {
+                return { type: 'country', data: country };
+            }
+        }
+    }
 
-  return card;
+    // General search in all data
+    const allResults = [];
+    
+    // Search in countries and their cities
+    travelData.countries?.forEach(country => {
+        if (country.name.toLowerCase().includes(query)) {
+            allResults.push({ type: 'country', data: country });
+        }
+        country.cities?.forEach(city => {
+            if (city.name.toLowerCase().includes(query) || 
+                city.description.toLowerCase().includes(query)) {
+                allResults.push({ type: 'city', data: city, country: country.name });
+            }
+        });
+    });
+
+    return { type: 'mixed', data: allResults };
 }
 
-// دالة تحديث التوقيت المحلي
-function updateLocalTime(locationName, timeZone) {
-  const options = {
-    timeZone: timeZone,
-    hour12: true,
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric'
-  };
-  
-  const localTime = new Date().toLocaleTimeString('ar-SA', options);
-  const timeElement = document.getElementById(`time-${locationName}`);
-  if (timeElement) {
-    timeElement.textContent = localTime;
-  }
+// Display results
+function displayResults(results) {
+    const resultsContainer = document.getElementById('resultsContainer');
+    resultsContainer.innerHTML = '';
+
+    if (!results.data || (Array.isArray(results.data) && results.data.length === 0)) {
+        showMessage('No results found', 'error');
+        return;
+    }
+
+    switch (results.type) {
+        case 'beaches':
+        case 'temples':
+            results.data.forEach(item => {
+                resultsContainer.appendChild(createResultCard(item));
+            });
+            break;
+            
+        case 'country':
+            // Display country info
+            const countryInfo = createCountryCard(results.data);
+            resultsContainer.appendChild(countryInfo);
+            
+            // Display cities
+            results.data.cities?.forEach(city => {
+                resultsContainer.appendChild(createResultCard(city, results.data.name));
+            });
+            break;
+            
+        case 'mixed':
+            results.data.forEach(result => {
+                if (result.type === 'country') {
+                    resultsContainer.appendChild(createCountryCard(result.data));
+                } else {
+                    resultsContainer.appendChild(createResultCard(result.data, result.country));
+                }
+            });
+            break;
+    }
 }
 
-// دالة مسح النتائج
+// Create result card
+function createResultCard(item, countryName = null) {
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    
+    const imageUrl = item.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image';
+    
+    let timeDisplay = '';
+    if (countryName && timeZones[countryName]) {
+        const localTime = getLocalTime(timeZones[countryName]);
+        timeDisplay = `<div class="result-time">🕐 Local Time: ${localTime}</div>`;
+    }
+    
+    card.innerHTML = `
+        <img src="${imageUrl}" alt="${item.name}" class="result-image">
+        <div class="result-content">
+            <h3 class="result-title">${item.name}</h3>
+            <p class="result-description">${item.description}</p>
+            ${timeDisplay}
+        </div>
+    `;
+    
+    return card;
+}
+
+// Create country card
+function createCountryCard(country) {
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    
+    const localTime = getLocalTime(timeZones[country.name]);
+    
+    card.innerHTML = `
+        <div class="result-content">
+            <h3 class="result-title">🌍 ${country.name}</h3>
+            <p class="result-description">Explore the amazing cities in ${country.name}</p>
+            <div class="result-time">🕐 Local Time: ${localTime}</div>
+        </div>
+    `;
+    
+    return card;
+}
+
+// Get local time
+function getLocalTime(timeZone) {
+    const options = {
+        timeZone: timeZone,
+        hour12: true,
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric'
+    };
+    
+    return new Date().toLocaleTimeString('en-US', options);
+}
+
+// Clear results
 function clearResults() {
-  const recommendationList = document.getElementById('recommendationList');
-  recommendationList.innerHTML = '';
-  document.getElementById('searchInput').value = '';
+    const resultsContainer = document.getElementById('resultsContainer');
+    const searchInput = document.getElementById('searchInput');
+    
+    resultsContainer.innerHTML = '';
+    searchInput.value = '';
+    searchInput.focus();
+}
+
+// Show message
+function showMessage(message, type = 'info') {
+    const resultsContainer = document.getElementById('resultsContainer');
+    resultsContainer.innerHTML = `
+        <div class="message ${type === 'error' ? 'error-message' : ''}">
+            ${message}
+        </div>
+    `;
 }
